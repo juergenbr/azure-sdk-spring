@@ -3,6 +3,7 @@ package at.breitenbaumer.dynatraceace.controller;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.File;
 import java.util.HashMap;
@@ -49,20 +50,12 @@ public class TestController {
 
     @RequestMapping("/")
 	public String index() {
-        String result = "";
-        PagedList<VirtualMachine> vms = azure.virtualMachines().list();
-        System.out.println("Number of VMs in Subscription: " + vms.size());
-        PagedList<GenericResource> res = azure.genericResources().list();
-        for(GenericResource re : res){
-            result += re.tags() + "<br>";
-            result += re.name() + "<br>";
-            result += re.type() + "<br>";
-            result += "<br>";
+        String result = "<h1>Azure SKD for JAVA Demo</h1>";
+        result += "<h2>Browsing resource groups and loading resource metadata</h2>";
+        
+        result += "<a href=\"http://localhost:8080/resourceGroups\">Show all resource groups</a>" + "<br>";
             
-        }
-        for(VirtualMachine vm : vms){
-            result += "Name: " + vm.name();
-        }
+        
 		return result;
     }
 
@@ -91,6 +84,26 @@ public class TestController {
 		return result;
     }
 
+    @RequestMapping("/resource/{resourceGroupName}")
+	public String getDetailsForResource(@PathVariable("resourceGroupName") String resourceGroupName, @RequestParam("resourceId") String resourceId) {
+        String result = "<h1>Resource Properties</h1>";
+        GenericResource res = azure.genericResources().getById(resourceId);
+        result += "<table border ='1'>" +
+            "<tr>" +
+            "<td><b>Name</b></td>" +
+            "<td><b>Properties</b></td>" +
+            "</tr>";
+            result += "<tr>";
+            result += "<td>";
+            result += res.name();
+            result += "</td><td>";
+            result += res.properties();
+            result += "</td>";
+            result += "</tr>";
+        result += "</table>";
+		return result;
+    }
+
     @RequestMapping("/resourceGroup/{resourceGroupName}")
 	public String getResourcesForResourceGroup(@PathVariable("resourceGroupName") String resourceGroupName) {
         String result = "<h1>Resources in Group " + resourceGroupName + "</h1>";
@@ -104,7 +117,7 @@ public class TestController {
         for(GenericResource re : res){
             result += "<tr>";
                 result += "<td>";
-                result += re.name();
+                result +=  "<a href=\"http://localhost:8080/resource/" + resourceGroupName + "?resourceId=" + re.id() + "\">" + re.name() + "</a>";
                 result += "</td><td>";
                 result += re.type();
                 result += "</td><td>";
